@@ -8,7 +8,7 @@ class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
 
   // 데이터베이스 객체를 저장할 변수
-  late Database _database;
+  Database? _database;
 
   // 싱글톤 패턴을 적용하여 애플리케이션 전체에서 하나의 인스턴스를 사용
   factory DatabaseHelper() {
@@ -24,7 +24,7 @@ class DatabaseHelper {
     if (_database == null) {
       _database = await _initDatabase(); // 데이터베이스 초기화 함수 호출
     }
-    return _database; // 초기화된 데이터베이스 객체 반환
+    return _database!; // 초기화된 데이터베이스 객체 반환
   }
 
   // 데이터베이스 초기화 함수
@@ -45,13 +45,13 @@ class DatabaseHelper {
     // 'ideas'라는 테이블 생성
     await db.execute('''
       CREATE TABLE ideas(
-        id INTEGER PRIMARY KEY AUTOINCREMENT, // 자동 증가하는 기본 키
-        title TEXT, // 아이디어 제목
-        motive TEXT, // 아이디어 동기
-        content TEXT, // 아이디어 내용
-        priority INTEGER, // 아이디어 우선순위
-        feedback TEXT, // 피드백 내용
-        createdAt INTEGER // 생성 시간 (타임스탬프)
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT,
+        motive TEXT,
+        content TEXT,
+        priority INTEGER,
+        feedback TEXT,
+        createdAt INTEGER
       )
     ''');
   }
@@ -59,18 +59,18 @@ class DatabaseHelper {
   // 새 아이디어를 데이터베이스에 삽입하는 함수
   Future<int> insertIdeaInfo(Map<String, dynamic> idea) async {
     final db = await database; // 데이터베이스 객체를 가져옴
-    return await db.insert('tb_idea', idea); // 'ideas' 테이블에 새로운 레코드 삽입
+    return await db.insert('ideas', idea); // 'ideas' 테이블에 새로운 레코드 삽입
   }
 
   // 데이터베이스에서 모든 아이디어를 조회하는 함수
   Future<List<Map<String, dynamic>>> getAllIdea() async {
     final db = await database; // 데이터베이스 객체를 가져옴
-    return await db.query('tb_idea'); // 'ideas' 테이블에서 모든 레코드를 조회하여 반환
+    return await db.query('ideas'); // 'ideas' 테이블에서 모든 레코드를 조회하여 반환
   }
 
   Future<List<IdeaInfo>> getAllIdeaInfo() async {
     final db = await database; // 데이터베이스 객체를 가져옴
-    final List<Map<String, dynamic>> result = await db.query('tb_idea');
+    final List<Map<String, dynamic>> result = await db.query('ideas');
     return List.generate(
       result.length,
       (index) {
@@ -82,8 +82,8 @@ class DatabaseHelper {
   // 특정 ID를 가진 아이디어를 조회하는 함수
   Future<IdeaInfo?> getIdeaById(IdeaInfo idea) async {
     final db = await database; // 데이터베이스 객체를 가져옴
-    final List<Map<String, dynamic>> result = await db.query('tb_idea',
-        where: 'id = ?', whereArgs: [idea.id]); // 조건에 맞는 레코드 조회
+    final List<Map<String, dynamic>> result = await db
+        .query('ideas', where: 'id = ?', whereArgs: [idea.id]); // 조건에 맞는 레코드 조회
     if (result.isNotEmpty) {
       // 조회 결과가 있으면
       return IdeaInfo.fromMap(result.first);
@@ -95,7 +95,7 @@ class DatabaseHelper {
   Future<int> updateIdea(IdeaInfo idea) async {
     final db = await database; // 데이터베이스 객체를 가져옴
     return await db.update(
-      'tb_idea',
+      'ideas',
       idea.toMap(),
       where: 'id = ?',
       whereArgs: [idea.id],
@@ -106,7 +106,7 @@ class DatabaseHelper {
   Future<int> deleteIdea(IdeaInfo idea) async {
     final db = await database; // 데이터베이스 객체를 가져옴
     return await db.delete(
-      'tb_idea',
+      'ideas',
       where: 'id = ?',
       whereArgs: [idea.id],
     ); // 조건에 맞는 레코드 삭제
