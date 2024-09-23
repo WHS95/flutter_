@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app/data/idea_info.dart';
+import 'package:flutter_app/database/database_helper.dart'; // Assuming DatabaseHelper is in this package
 
 class EditScreen extends StatefulWidget {
   final IdeaInfo? idea;
@@ -17,6 +18,25 @@ class _EditScreenState extends State<EditScreen> {
   final TextEditingController contentController = TextEditingController();
   final TextEditingController scoreController = TextEditingController();
   final TextEditingController userFeedbackController = TextEditingController();
+  int selectedScore = 0; // 추가된 변수
+
+  // 데이터베이스 헬퍼 인스턴스 생성
+  final DatabaseHelper _databaseHelper = DatabaseHelper();
+
+  // 저장 버튼을 눌렀을 때 호출되는 함수
+  void _saveIdea() async {
+    Map<String, dynamic> idea = {
+      'title': titleController.text,
+      'motive': motivationController.text,
+      'content': contentController.text,
+      'priority': selectedScore,
+      'feedback': userFeedbackController.text,
+      'createdAt': DateTime.now().millisecondsSinceEpoch,
+    };
+
+    await _databaseHelper.insertIdeaInfo(idea);
+    Navigator.pop(context); // 저장 후 이전 화면으로 돌아가기
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -129,6 +149,44 @@ class _EditScreenState extends State<EditScreen> {
               const SizedBox(
                 height: 6,
               ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: List.generate(5, (index) {
+                  int score = index + 1;
+                  return ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: selectedScore == score
+                          ? Colors.blue
+                          : Colors.white, // 기본 선택 안했을 시 흰색 배경
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        side: BorderSide(
+                          color: selectedScore == score
+                              ? Colors.blue
+                              : Colors.grey,
+                        ),
+                      ),
+                      minimumSize: const Size(50, 50), // 정사각형 모양
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        selectedScore = score;
+                      });
+                    },
+                    child: Text(
+                      '$score',
+                      style: TextStyle(
+                        color: selectedScore == score
+                            ? Colors.white
+                            : Colors.black,
+                      ),
+                    ),
+                  );
+                }),
+              ),
+              const SizedBox(
+                height: 6,
+              ),
               const Text('유저피드백 상황(선택)'),
               TextField(
                 maxLines: 5,
@@ -148,6 +206,10 @@ class _EditScreenState extends State<EditScreen> {
                   ),
                 ),
                 controller: userFeedbackController,
+              ),
+              ElevatedButton(
+                onPressed: _saveIdea,
+                child: const Text('저장'),
               ),
             ],
           ),

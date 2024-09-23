@@ -44,10 +44,23 @@ class _MyWidgetState extends State<MainScreen> {
       ),
       body: Container(
         margin: const EdgeInsets.all(16), // 외부 여백 설정
-        child: ListView.builder(
-          itemCount: 10, // 아이템 개수
-          itemBuilder: (context, index) {
-            return listItem(index); // 리스트 아이템 생성
+        child: FutureBuilder<List<IdeaInfo>>(
+          future: _ideas,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasError) {
+              return Center(child: Text('Error: ${snapshot.error}'));
+            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return const Center(child: Text('No ideas available'));
+            } else {
+              return ListView.builder(
+                itemCount: snapshot.data!.length,
+                itemBuilder: (context, index) {
+                  return listItem(snapshot.data![index]); // 리스트 아이템 생성
+                },
+              );
+            }
           },
         ),
       ),
@@ -70,7 +83,7 @@ class _MyWidgetState extends State<MainScreen> {
   }
 
   // 리스트 아이템을 생성하는 함수
-  Widget listItem(int index) {
+  Widget listItem(IdeaInfo idea) {
     return Container(
       height: 82, // 높이 설정
       margin: const EdgeInsets.only(top: 16), // 리스트 아이템 간의 간격을 조정
@@ -87,23 +100,25 @@ class _MyWidgetState extends State<MainScreen> {
           // 아이디어 제목
           Container(
             margin: const EdgeInsets.only(left: 16, bottom: 20), // 'const' 추가
-            child: const Text(
-              "#환경보호 아이디어 만들기",
-              style: TextStyle(fontSize: 16), // 글자 크기 설정
+            child: Text(
+              idea.title,
+              style: const TextStyle(fontSize: 16), // 글자 크기 설정
             ),
           ),
           // 아이디어 일시
-          const Positioned(
+          Positioned(
             right: 16,
             bottom: 16,
-            child: Text("2024-05-01"),
+            child: Text(
+              DateTime.fromMillisecondsSinceEpoch(idea.createdAt).toString(),
+            ),
           ),
           // 아이디어 중요도 점수
           Positioned(
             left: 10, // 왼쪽 여백 설정
             bottom: 10, // 아래쪽 여백 설정
             child: RatingBar.builder(
-              initialRating: 3, // 초기 평점 설정
+              initialRating: idea.priority.toDouble(), // 초기 평점 설정
               minRating: 1, // 최소 평점 설정
               direction: Axis.horizontal, // 평점 방향 설정
               allowHalfRating: true, // 반 평점 허용

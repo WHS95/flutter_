@@ -31,6 +31,7 @@ class DatabaseHelper {
   Future<Database> _initDatabase() async {
     // 데이터베이스 파일의 경로 설정 (이 경로에 데이터베이스 파일이 생성됨)
     String path = join(await getDatabasesPath(), 'my_database.db');
+    print('Database path: $path'); // 경로를 콘솔에 출력
 
     // 데이터베이스를 열고, 만약 파일이 없다면 새로 생성합니다.
     return await openDatabase(
